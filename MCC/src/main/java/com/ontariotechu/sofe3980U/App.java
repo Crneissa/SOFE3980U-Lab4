@@ -23,7 +23,7 @@ public class App
         }
 
         double ceSum = 0.0;
-        double eps = 1e-15;
+        double eps = 1e-15; // avoid log(0)
         int n = 0;
 
         int[][] confusionMatrix = new int[5][5];
@@ -35,11 +35,13 @@ public class App
             for (int i = 0; i < 5; i++) {
                 yPredicted[i] = Double.parseDouble(row[i + 1]);
             }
+            // store probabilities for 5 classes
 
             // Find predicted class using argmax
             int predictedClass = 1;
             double maxProb = yPredicted[0];
 
+            // choose class with highest probability
             for (int i = 1; i < 5; i++) {
                 if (yPredicted[i] > maxProb) {
                     maxProb = yPredicted[i];
@@ -48,17 +50,17 @@ public class App
             }
 
             // Cross Entropy: use probability of the true class
-            double pTrue = yPredicted[yTrue - 1];
-            pTrue = Math.max(eps, Math.min(1.0 - eps, pTrue));
-            ceSum += -Math.log(pTrue);
+            double pTrue = yPredicted[yTrue - 1]; // probability assigned to correct class
+            pTrue = Math.max(eps, Math.min(1.0 - eps, pTrue)); // avoid log(0)
+            ceSum += -Math.log(pTrue); // accumulate cross entropy
 
             // Update confusion matrix
-            confusionMatrix[yTrue - 1][predictedClass - 1]++;
+            confusionMatrix[yTrue - 1][predictedClass - 1]++; // count actual vs predicted class
 
             n++;
         }
 
-        double crossEntropy = ceSum / n;
+        double crossEntropy = ceSum / n; // average cross entropy over all samples
 
         System.out.println("Cross Entropy (CE) = " + crossEntropy);
         System.out.println("\nConfusion Matrix:");
