@@ -71,26 +71,27 @@ public class App
         double mseSum = 0.0;
         double maeSum = 0.0;
         double mareSum = 0.0;
-        double eps = 1e-10;
+        double eps = 1e-10; // small value to avoid division by zero
         int n = 0;
 
         for (String[] row : allData) {
             double y_true = Double.parseDouble(row[0]);
             double y_predicted = Double.parseDouble(row[1]);
 
-            double error = y_true - y_predicted;
+            double error = y_true - y_predicted; // difference between actual and predicted
 
-            mseSum += error * error;
-            maeSum += Math.abs(error);
-            mareSum += Math.abs(error) / (Math.abs(y_true) + eps);
+            mseSum += error * error;             // squared error for MSE
+            maeSum += Math.abs(error);           // absolute error for MAE
+            mareSum += Math.abs(error) / (Math.abs(y_true) + eps); // relative error for MARE
 
             n++;
         }
 
-        double mse = mseSum / n;
-        double mae = maeSum / n;
-        double mare = mareSum / n;
+        double mse = mseSum / n;   // average squared error
+        double mae = maeSum / n;   // average absolute error
+        double mare = mareSum / n; // average relative error
 
+        // Compare models to find the best (lowest error)
         return new ModelMetrics(filePath, mse, mae, mare);
     }
 
