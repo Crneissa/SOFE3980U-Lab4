@@ -7,6 +7,7 @@ import com.opencsv.*;
 
 public class App
 {
+    // Store results for each model
     static class ModelMetrics {
         String modelName;
         double bce;
@@ -119,7 +120,7 @@ public class App
         List<DataPoint> dataPoints = new ArrayList<>();
 
         double bceSum = 0.0;
-        double eps = 1e-15;
+        double eps = 1e-15; // prevents log(0)
 
         int tp = 0, tn = 0, fp = 0, fn = 0;
 
@@ -131,9 +132,12 @@ public class App
 
             double p = Math.max(eps, Math.min(1.0 - eps, yPred));
             bceSum += yTrue * Math.log(p) + (1 - yTrue) * Math.log(1 - p);
-
+            // Binary Cross Entropy calculation
+            
             int predictedLabel = (yPred >= 0.5) ? 1 : 0;
+            // Convert probability to class using threshold 0.5
 
+            // Build confusion matrix
             if (yTrue == 1 && predictedLabel == 1) tp++;
             else if (yTrue == 0 && predictedLabel == 0) tn++;
             else if (yTrue == 0 && predictedLabel == 1) fp++;
@@ -143,11 +147,11 @@ public class App
         int n = allData.size();
         double bce = -bceSum / n;
 
-        double accuracy = (tp + tn) / (double)(tp + tn + fp + fn);
-        double precision = (tp + fp == 0) ? 0.0 : tp / (double)(tp + fp);
-        double recall = (tp + fn == 0) ? 0.0 : tp / (double)(tp + fn);
-        double f1 = (precision + recall == 0) ? 0.0 : 2 * precision * recall / (precision + recall);
-
+    double accuracy = (tp + tn) / (double)(tp + tn + fp + fn); // overall correctness
+    double precision = tp / (double)(tp + fp); // correct positive predictions
+    double recall = tp / (double)(tp + fn);    // how many actual positives were found
+    double f1 = 2 * precision * recall / (precision + recall); // balance of precision & recall
+        
         double auc = computeAUC(dataPoints);
 
         return new ModelMetrics(filePath, bce, tp, tn, fp, fn, accuracy, precision, recall, f1, auc);
@@ -166,19 +170,22 @@ public class App
 
         for (int i = 0; i <= 100; i++) {
             double threshold = i / 100.0;
-
+            // test different thresholds from 0 to 1
+            
             int tp = 0, fp = 0, tn = 0, fn = 0;
 
             for (DataPoint point : dataPoints) {
                 int predictedLabel = (point.yPred >= threshold) ? 1 : 0;
+                // recompute classification at each threshold
 
                 if (point.yTrue == 1 && predictedLabel == 1) tp++;
                 else if (point.yTrue == 0 && predictedLabel == 0) tn++;
                 else if (point.yTrue == 0 && predictedLabel == 1) fp++;
                 else if (point.yTrue == 1 && predictedLabel == 0) fn++;
             }
-
+            // true positive rate
             double tpr = (totalPositives == 0) ? 0.0 : tp / (double) totalPositives;
+            // false positive rate
             double fpr = (totalNegatives == 0) ? 0.0 : fp / (double) totalNegatives;
 
             rocPoints.add(new ROCPoint(fpr, tpr));
@@ -194,6 +201,7 @@ public class App
             double y2 = rocPoints.get(i).tpr;
 
             auc += (x2 - x1) * (y1 + y2) / 2.0;
+            // trapezoidal rule to approximate ROC area
         }
 
         return auc;
